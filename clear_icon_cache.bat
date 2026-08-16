@@ -17,7 +17,7 @@ echo ========================================================
 echo Step 2: Stopping Windows Explorer...
 echo ========================================================
 taskkill /f /im explorer.exe
-timeout /t 2 >nul
+ping -n 3 127.0.0.1 >nul
 
 echo ========================================================
 echo Step 3: Clearing Icon and Thumbnail Cache Files...
@@ -47,30 +47,10 @@ if exist thumbcache_*.db (
   echo No thumbnail cache files found ^(may already be clear^).
 )
 
-echo Forcing icon cache rebuild...
-ie4uinit.exe -show
-
 echo ========================================================
 echo Step 4: Restarting Windows Explorer...
 echo ========================================================
 start explorer.exe
-
-echo Waiting for Explorer to finish starting...
-set /a TRIES=0
-:WAIT_EXPLORER
-timeout /t 1 >nul
-set /a TRIES+=1
-tasklist /fi "imagename eq explorer.exe" | find /i "explorer.exe" >nul
-if not errorlevel 1 goto EXPLORER_READY
-if %TRIES% geq 15 (
-  echo Explorer did not report ready after 15 seconds, continuing anyway.
-  goto EXPLORER_READY
-)
-goto WAIT_EXPLORER
-
-:EXPLORER_READY
-echo Explorer is running. Giving the shell a moment to initialize...
-timeout /t 3 >nul
 
 echo ========================================================
 echo Step 5: Reopening previously open folders...
@@ -79,7 +59,7 @@ if exist "%SAVEFILE%" (
   for /f "usebackq tokens=* delims=" %%F in ("%SAVEFILE%") do (
     if exist "%%F\" (
       start "" explorer.exe "%%F"
-      timeout /t 2 >nul
+      ping -n 3 127.0.0.1 >nul
     )
   )
   del /q "%SAVEFILE%"
