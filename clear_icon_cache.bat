@@ -8,7 +8,7 @@ set "SAVEFILE=%temp%\open_explorer_folders.txt"
 echo ========================================================
 echo Step 1: Saving list of open Explorer folders...
 echo ========================================================
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$paths = @(); (New-Object -ComObject Shell.Application).Windows() | ForEach-Object { try { if ($_.Document -and $_.Document.Folder -and $_.Document.Folder.Self) { $p = $_.Document.Folder.Self.Path; if ($p) { $paths += $p } } } catch {} }; $paths | Out-File -FilePath '%SAVEFILE%' -Encoding Default"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$paths = @(); (New-Object -ComObject Shell.Application).Windows() | ForEach-Object { try { if ($_.Document -and $_.Document.Folder -and $_.Document.Folder.Self) { $p = $_.Document.Folder.Self.Path; if ($p) { $paths += $p } } } catch {} }; if ($paths.Count -gt 0) { $paths | Out-File -FilePath '%SAVEFILE%' -Encoding Default }"
 
 echo Captured folders:
 if exist "%SAVEFILE%" type "%SAVEFILE%"
@@ -56,11 +56,19 @@ echo ========================================================
 start explorer.exe
 
 echo Waiting for Explorer to finish starting...
+set /a TRIES=0
 :WAIT_EXPLORER
 timeout /t 1 >nul
+set /a TRIES+=1
 tasklist /fi "imagename eq explorer.exe" | find /i "explorer.exe" >nul
-if errorlevel 1 goto WAIT_EXPLORER
+if not errorlevel 1 goto EXPLORER_READY
+if %TRIES% geq 15 (
+  echo Explorer did not report ready after 15 seconds, continuing anyway.
+  goto EXPLORER_READY
+)
+goto WAIT_EXPLORER
 
+:EXPLORER_READY
 echo Explorer is running. Giving the shell a moment to initialize...
 timeout /t 3 >nul
 
@@ -69,7 +77,7 @@ echo Step 5: Reopening previously open folders...
 echo ========================================================
 if exist "%SAVEFILE%" (
   for /f "usebackq tokens=* delims=" %%F in ("%SAVEFILE%") do (
-    if not "%%F"=="" (
+    if exist "%%F\" (
       start "" explorer.exe "%%F"
       timeout /t 2 >nul
     )
