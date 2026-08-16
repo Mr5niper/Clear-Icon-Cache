@@ -57,7 +57,7 @@ echo Step 5: Reopening previously open folders...
 echo ========================================================
 if exist "%SAVEFILE%" (
   for /f "usebackq tokens=* delims=" %%F in ("%SAVEFILE%") do (
-    if exist "%%F\" (
+    if not "%%~F"=="" (
       start "" explorer.exe "%%F"
       ping -n 3 127.0.0.1 >nul
     )
