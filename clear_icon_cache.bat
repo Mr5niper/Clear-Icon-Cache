@@ -71,7 +71,7 @@ if exist "%SAVEFILE%" (
   for /f "usebackq tokens=* delims=" %%F in ("%SAVEFILE%") do (
     if not "%%F"=="" (
       start "" explorer.exe "%%F"
-      timeout /t 1 >nul
+      timeout /t 2 >nul
     )
   )
   del /q "%SAVEFILE%"
